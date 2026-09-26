@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>TV Back Bridge</title>
+</head>
+<body>
+  <div id="VidaaBackConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox">
+    <div data-role="content">
+      <div class="content-primary">
+        <form id="VidaaBackConfigForm">
+          <div class="checkboxContainer checkboxContainer-withDescription">
+            <label class="emby-checkbox-label">
+              <input id="VidaaBackEnabled" type="checkbox" is="emby-checkbox">
+              <span>Enable remote Back mapping</span>
+            </label>
+          </div>
+          <div class="checkboxContainer checkboxContainer-withDescription">
+            <label class="emby-checkbox-label">
+              <input id="VidaaBackDebugMode" type="checkbox" is="emby-checkbox">
+              <span>Show received remote keys on the TV</span>
+            </label>
+            <div class="fieldDescription">Turn this on to identify your TV's Back key, then turn it off after setup.</div>
+          </div>
+          <div class="inputContainer">
+            <label class="inputLabel" for="VidaaBackKeyCode">Back key number</label>
+            <input id="VidaaBackKeyCode" type="number" min="0" max="65535" is="emby-input">
+            <div class="fieldDescription">The tested Toshiba VIDAA remote sends 8. Use 0 to match by key name only.</div>
+          </div>
+          <div class="inputContainer">
+            <label class="inputLabel" for="VidaaBackKeyName">Back key name</label>
+            <input id="VidaaBackKeyName" type="text" is="emby-input">
+            <div class="fieldDescription">The tested key name is Backspace. Leave blank to match by number only.</div>
+          </div>
+          <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Save</span></button>
+        </form>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var pluginId = '50a91f83-3527-4dc6-839a-66575393aaed';
+        var page = document.querySelector('#VidaaBackConfigPage');
+        var form = page.querySelector('#VidaaBackConfigForm');
+
+        page.addEventListener('pageshow', function () {
+          Dashboard.showLoadingMsg();
+          ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+            page.querySelector('#VidaaBackEnabled').checked = config.Enabled;
+            page.querySelector('#VidaaBackDebugMode').checked = config.DebugMode;
+            page.querySelector('#VidaaBackKeyCode').value = config.BackKeyCode;
+            page.querySelector('#VidaaBackKeyName').value = config.BackKeyName || '';
+            Dashboard.hideLoadingMsg();
+          });
+        });
+
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          var keyCode = Number(page.querySelector('#VidaaBackKeyCode').value);
+          if (!Number.isInteger(keyCode) || keyCode < 0 || keyCode > 65535) {
+            alert('Enter a key number between 0 and 65535.');
+            return false;
+          }
+
+          Dashboard.showLoadingMsg();
+          ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+            config.Enabled = page.querySelector('#VidaaBackEnabled').checked;
+            config.DebugMode = page.querySelector('#VidaaBackDebugMode').checked;
+            config.BackKeyCode = keyCode;
+            config.BackKeyName = page.querySelector('#VidaaBackKeyName').value.trim();
+            ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+              Dashboard.processPluginConfigurationUpdateResult(result);
+            });
+          });
+          return false;
+        });
+      })();
+    </script>
+  </div>
+</body>
+</html>
