@@ -1,10 +1,17 @@
 (function () {
   var options = __VIDAA_BACK_OPTIONS__;
   var userAgent = navigator.userAgent.toLowerCase();
-  var isVidaaTv = /vidaa|hisense|toshiba/.test(userAgent) ||
-    typeof window.Hisense_GetFirmWareVersion === 'function';
+  var keywordSetting = String(options.UserAgentKeywords == null ? 'vidaa, hisense, toshiba' : options.UserAgentKeywords);
+  var keywords = keywordSetting.split(',').map(function (keyword) {
+    return keyword.trim().toLowerCase();
+  }).filter(Boolean);
+  var useDefaultKeywords = keywords.length === 3 &&
+    ['vidaa', 'hisense', 'toshiba'].every(function (keyword) { return keywords.indexOf(keyword) !== -1; });
+  var isMatchingDevice = !keywordSetting.trim() || keywords.some(function (keyword) {
+    return userAgent.indexOf(keyword) !== -1;
+  }) || (useDefaultKeywords && typeof window.Hisense_GetFirmWareVersion === 'function');
 
-  if (!isVidaaTv) {
+  if (!isMatchingDevice) {
     return;
   }
 

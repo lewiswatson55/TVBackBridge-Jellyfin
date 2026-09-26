@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Jellyfin.Plugin.VidaaBack.JF12'">
+    <BaseIntermediateOutputPath>obj/jf12/</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

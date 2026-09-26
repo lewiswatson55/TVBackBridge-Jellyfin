@@ -16,6 +16,8 @@ public sealed class PluginConfiguration : BasePluginConfiguration
     public int BackKeyCode { get; set; } = 8;
 
     public string BackKeyName { get; set; } = "Backspace";
+
+    public string UserAgentKeywords { get; set; } = "vidaa, hisense, toshiba";
 }
 
 public sealed class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages

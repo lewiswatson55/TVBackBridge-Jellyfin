@@ -32,7 +32,13 @@
             <input id="VidaaBackKeyName" type="text" is="emby-input">
             <div class="fieldDescription">The tested key name is Backspace. Leave blank to match by number only.</div>
           </div>
+          <div class="inputContainer">
+            <label class="inputLabel" for="VidaaBackUserAgentKeywords">User agent contains</label>
+            <input id="VidaaBackUserAgentKeywords" type="text" is="emby-input">
+            <div class="fieldDescription">Comma-separated, case-insensitive terms. Defaults to vidaa, hisense, toshiba. Leave blank to enable on every device.</div>
+          </div>
           <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Save</span></button>
+          <button id="VidaaBackReset" is="emby-button" type="button" class="raised block emby-button"><span>Reset to defaults</span></button>
         </form>
       </div>
     </div>
@@ -41,15 +47,38 @@
         var pluginId = '50a91f83-3527-4dc6-839a-66575393aaed';
         var page = document.querySelector('#VidaaBackConfigPage');
         var form = page.querySelector('#VidaaBackConfigForm');
+        var defaults = { Enabled: true, DebugMode: false, BackKeyCode: 8, BackKeyName: 'Backspace', UserAgentKeywords: 'vidaa, hisense, toshiba' };
+
+        function showConfiguration(config) {
+          page.querySelector('#VidaaBackEnabled').checked = config.Enabled;
+          page.querySelector('#VidaaBackDebugMode').checked = config.DebugMode;
+          page.querySelector('#VidaaBackKeyCode').value = config.BackKeyCode;
+          page.querySelector('#VidaaBackKeyName').value = config.BackKeyName || '';
+          page.querySelector('#VidaaBackUserAgentKeywords').value = config.UserAgentKeywords == null ? defaults.UserAgentKeywords : config.UserAgentKeywords;
+        }
+
+        function saveConfiguration(values) {
+          Dashboard.showLoadingMsg();
+          ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+            Object.keys(values).forEach(function (key) { config[key] = values[key]; });
+            return ApiClient.updatePluginConfiguration(pluginId, config);
+          }).then(function (result) {
+            showConfiguration(values);
+            Dashboard.processPluginConfigurationUpdateResult(result);
+          }).catch(function (error) {
+            Dashboard.hideLoadingMsg();
+            alert('Could not save TV Back Bridge settings: ' + error);
+          });
+        }
 
         page.addEventListener('pageshow', function () {
           Dashboard.showLoadingMsg();
           ApiClient.getPluginConfiguration(pluginId).then(function (config) {
-            page.querySelector('#VidaaBackEnabled').checked = config.Enabled;
-            page.querySelector('#VidaaBackDebugMode').checked = config.DebugMode;
-            page.querySelector('#VidaaBackKeyCode').value = config.BackKeyCode;
-            page.querySelector('#VidaaBackKeyName').value = config.BackKeyName || '';
+            showConfiguration(config);
             Dashboard.hideLoadingMsg();
+          }).catch(function (error) {
+            Dashboard.hideLoadingMsg();
+            alert('Could not load TV Back Bridge settings: ' + error);
           });
         });
 
@@ -61,17 +90,18 @@
             return false;
           }
 
-          Dashboard.showLoadingMsg();
-          ApiClient.getPluginConfiguration(pluginId).then(function (config) {
-            config.Enabled = page.querySelector('#VidaaBackEnabled').checked;
-            config.DebugMode = page.querySelector('#VidaaBackDebugMode').checked;
-            config.BackKeyCode = keyCode;
-            config.BackKeyName = page.querySelector('#VidaaBackKeyName').value.trim();
-            ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
-              Dashboard.processPluginConfigurationUpdateResult(result);
-            });
+          saveConfiguration({
+            Enabled: page.querySelector('#VidaaBackEnabled').checked,
+            DebugMode: page.querySelector('#VidaaBackDebugMode').checked,
+            BackKeyCode: keyCode,
+            BackKeyName: page.querySelector('#VidaaBackKeyName').value.trim(),
+            UserAgentKeywords: page.querySelector('#VidaaBackUserAgentKeywords').value.trim()
           });
           return false;
+        });
+
+        page.querySelector('#VidaaBackReset').addEventListener('click', function () {
+          saveConfiguration(defaults);
         });
       })();
     </script>

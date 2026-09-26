@@ -5,6 +5,17 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
 const string sampleHtml = "<!doctype html><html><body><main>Jellyfin</main></body></html>";
+var settingsResource = typeof(Plugin).Assembly.GetManifestResourceStream("Jellyfin.Plugin.VidaaBack.Configuration.configPage.html")
+    ?? throw new Exception("Settings page resource missing");
+using (var settingsReader = new StreamReader(settingsResource))
+{
+    var settingsPage = await settingsReader.ReadToEndAsync();
+    if (!settingsPage.Contains("VidaaBackUserAgentKeywords", StringComparison.Ordinal) ||
+        !settingsPage.Contains("VidaaBackReset", StringComparison.Ordinal))
+    {
+        throw new Exception("New settings controls are missing");
+    }
+}
 var sampleFile = Path.GetTempFileName();
 await File.WriteAllTextAsync(sampleFile, sampleHtml);
 
@@ -30,6 +41,7 @@ try
     var indexHtml = Encoding.UTF8.GetString(indexBody.ToArray());
     if (!indexHtml.Contains("data-vidaa-back-plugin", StringComparison.Ordinal) ||
         !indexHtml.Contains("Key: ", StringComparison.Ordinal) ||
+        !indexHtml.Contains("UserAgentKeywords", StringComparison.Ordinal) ||
         indexContext.Response.ContentLength != indexBody.Length ||
         indexContext.Request.Headers.IfNoneMatch != "old-etag")
     {

@@ -113,7 +113,8 @@ public sealed class VidaaBackStartupFilter : IStartupFilter
             configuration.Enabled,
             configuration.DebugMode,
             configuration.BackKeyCode,
-            configuration.BackKeyName
+            configuration.BackKeyName,
+            configuration.UserAgentKeywords
         });
         return "<script data-vidaa-back-plugin>" +
             ScriptTemplate.Replace("__VIDAA_BACK_OPTIONS__", options, StringComparison.Ordinal) +
